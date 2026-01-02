@@ -29,8 +29,15 @@ type TeamRow = {
   status: "alive" | "dead";
   nickname: string | null;
   player_id: string;
+  is_active: boolean;
+  active_slot: number | null;
   pokemon_species: { name: string; sprite_url: string };
 };
+
+function firstFreeSlot(used: number[]) {
+  for (let s = 1; s <= 6; s++) if (!used.includes(s)) return s;
+  return null;
+}
 
 async function getOrCreateSpecies(name: string) {
   const normalized = normalizePokemonName(name);
@@ -54,7 +61,7 @@ async function getOrCreateSpecies(name: string) {
   const { data: inserted, error } = await supabase
     .from("pokemon_species")
     .insert({
-      id: poke.id, // opcional si tu PK es autoincremental; si no, úsalo
+      id: poke.id,
       name: normalized,
       sprite_url: sprite,
     })
@@ -65,61 +72,19 @@ async function getOrCreateSpecies(name: string) {
   return inserted;
 }
 
-async function addPokemon({
-  runId,
-  playerId,
-  pokemonName,
-  nickname,
-}: {
-  runId: string;
-  playerId: string;
-  pokemonName: string;
-  nickname?: string;
-}) {
-  const species = await getOrCreateSpecies(pokemonName);
-
-  const { data: inserted, error } = await supabase
-    .from("team_pokemon")
-    .insert({
-      run_id: runId,
-      player_id: playerId,
-      species_id: species.id,
-      nickname,
-      status: "alive",
-    })
-    .select(
-      `
-      id,
-      status,
-      nickname,
-      player_id,
-      pokemon_species (
-        name,
-        sprite_url
-      )
-    `
-    )
-    .single();
-
-  if (error) {
-    if ((error as any).code === "23505") {
-      throw new Error("Ese Pokémon ya fue capturado en esta run");
-    }
-    throw error;
-  }
-
-  return inserted as TeamRow;
-}
-
 function PlayerBox({
   alive,
   dead,
   onToggleDeath,
+  onActivate,
+  onDeactivate,
   onClose,
 }: {
   alive: TeamRow[];
   dead: TeamRow[];
   onToggleDeath: (pokemonId: string, currentStatus: "alive" | "dead") => void;
+  onActivate: (poke: TeamRow) => Promise<void>;
+  onDeactivate: (pokeId: string) => Promise<void>;
   onClose: () => void;
 }) {
   return (
@@ -136,18 +101,38 @@ function PlayerBox({
         <div className="flex gap-3 flex-wrap">
           {alive.map((poke) => {
             const label = poke.nickname || poke.pokemon_species.name;
+            const isActive = poke.is_active && poke.active_slot != null;
             return (
-              <div
-                key={poke.id}
-                className="relative cursor-pointer transition"
-                title={label}
-                onClick={() => onToggleDeath(poke.id, poke.status)}
-              >
-                <img
-                  src={poke.pokemon_species.sprite_url}
-                  alt={label}
-                  className="w-20 h-20 pixelated"
-                />
+              <div key={poke.id} className="space-y-1">
+                <div
+                  className="relative cursor-pointer transition"
+                  title={label}
+                  onClick={() => onToggleDeath(poke.id, poke.status)}
+                >
+                  <img
+                    src={poke.pokemon_species.sprite_url}
+                    alt={label}
+                    className="w-20 h-20 pixelated"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 text-xs">
+                  <button
+                    className={`px-2 py-1 rounded border ${
+                      isActive ? "bg-yellow-100" : ""
+                    }`}
+                    onClick={async () => {
+                      try {
+                        if (isActive) await onDeactivate(poke.id);
+                        else await onActivate(poke);
+                      } catch (e: any) {
+                        alert(e.message);
+                      }
+                    }}
+                  >
+                    ⭐ {isActive ? "Activo" : "Activar"}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -228,7 +213,7 @@ export default function RunDashboard() {
     );
     setPlayers(playersFlat);
 
-    // 3️⃣ traer equipo completo
+    // 3️⃣ traer equipo completo (incluye is_active y active_slot)
     const { data: teamData } = await supabase
       .from("team_pokemon")
       .select(
@@ -237,6 +222,8 @@ export default function RunDashboard() {
         status,
         nickname,
         player_id,
+        is_active,
+        active_slot,
         pokemon_species (
           name,
           sprite_url
@@ -248,21 +235,165 @@ export default function RunDashboard() {
     setTeam((teamData ?? []) as TeamRow[]);
   }
 
+  async function addPokemon({
+    runId,
+    playerId,
+    pokemonName,
+    nickname,
+  }: {
+    runId: string;
+    playerId: string;
+    pokemonName: string;
+    nickname?: string;
+  }) {
+    const species = await getOrCreateSpecies(pokemonName);
+
+    const { data: inserted, error } = await supabase
+      .from("team_pokemon")
+      .insert({
+        run_id: runId,
+        player_id: playerId,
+        species_id: species.id,
+        nickname,
+        status: "alive",
+        is_active: false,
+        active_slot: null,
+      })
+      .select(
+        `
+        id, status, nickname, player_id, is_active, active_slot,
+        pokemon_species (name, sprite_url)
+      `
+      )
+      .single();
+
+    if (error) {
+      if ((error as any).code === "23505") {
+        throw new Error("Ese Pokémon ya fue capturado en esta run");
+      }
+      throw error;
+    }
+
+    return inserted as TeamRow;
+  }
+
+  // ✅ Activar consultando DB para evitar colisión de slots
+  async function activatePokemon(poke: TeamRow) {
+    if (!runId) throw new Error("Run no cargada");
+    if (poke.status !== "alive")
+      throw new Error("Solo podés activar pokes vivos");
+
+    // 1) Consultar slots activos reales en DB
+    const { data: activeRows, error: qError } = await supabase
+      .from("team_pokemon")
+      .select("active_slot")
+      .eq("run_id", runId)
+      .eq("player_id", poke.player_id)
+      .eq("is_active", true);
+
+    if (qError) throw qError;
+
+    const used = (activeRows ?? [])
+      .map((r: any) => r.active_slot)
+      .filter((s: number | null) => s != null) as number[];
+
+    // 2) Elegir primer slot libre
+    let slot = firstFreeSlot(used);
+    if (!slot) throw new Error("Equipo lleno (6). Liberá un slot.");
+
+    // 3) Intentar activar y, si hay colisión (23505), reintentar con slots recalculados
+    const tryUpdate = async (targetSlot: number) => {
+      return await supabase
+        .from("team_pokemon")
+        .update({ is_active: true, active_slot: targetSlot })
+        .eq("id", poke.id)
+        .select(
+          `
+          id, status, nickname, player_id, is_active, active_slot,
+          pokemon_species (name, sprite_url)
+        `
+        )
+        .single();
+    };
+
+    let { data, error } = await tryUpdate(slot);
+
+    if (error && (error as any).code === "23505") {
+      const { data: activeRows2 } = await supabase
+        .from("team_pokemon")
+        .select("active_slot")
+        .eq("run_id", runId)
+        .eq("player_id", poke.player_id)
+        .eq("is_active", true);
+
+      const used2 = (activeRows2 ?? [])
+        .map((r: any) => r.active_slot)
+        .filter((s: number | null) => s != null) as number[];
+
+      const slot2 = firstFreeSlot(used2);
+      if (!slot2) throw new Error("Equipo lleno (6). Liberá un slot.");
+
+      const res2 = await tryUpdate(slot2);
+      data = res2.data;
+      error = res2.error;
+    }
+
+    if (error) throw error;
+
+    setTeam((prev) =>
+      prev.map((p) => (p.id === poke.id ? (data as TeamRow) : p))
+    );
+  }
+
+  async function deactivatePokemon(pokeId: string) {
+    const { data, error } = await supabase
+      .from("team_pokemon")
+      .update({ is_active: false, active_slot: null })
+      .eq("id", pokeId)
+      .select(
+        `
+        id, status, nickname, player_id, is_active, active_slot,
+        pokemon_species (name, sprite_url)
+      `
+      )
+      .single();
+    if (error) throw error;
+
+    setTeam((prev) =>
+      prev.map((p) => (p.id === pokeId ? (data as TeamRow) : p))
+    );
+  }
+
   async function toggleDeath(
     pokemonId: string,
     currentStatus: "alive" | "dead"
   ) {
+    const next = currentStatus === "alive" ? "dead" : "alive";
+
+    // Update estado
     await supabase
       .from("team_pokemon")
-      .update({
-        status: currentStatus === "alive" ? "dead" : "alive",
-      })
+      .update({ status: next })
       .eq("id", pokemonId);
+
+    // Si muere, lo removemos del equipo activo
+    if (next === "dead") {
+      await supabase
+        .from("team_pokemon")
+        .update({ is_active: false, active_slot: null })
+        .eq("id", pokemonId);
+    }
 
     setTeam((prev) =>
       prev.map((p) =>
         p.id === pokemonId
-          ? { ...p, status: p.status === "alive" ? "dead" : "alive" }
+          ? {
+              ...p,
+              status: next,
+              ...(next === "dead"
+                ? { is_active: false, active_slot: null }
+                : {}),
+            }
           : p
       )
     );
@@ -278,8 +409,8 @@ export default function RunDashboard() {
         {players.map((player) => {
           const playerTeam = team.filter((p) => p.player_id === player.id);
           const alive = playerTeam.filter((p) => p.status === "alive");
-          const activeTeam = alive.slice(0, 6);
           const dead = playerTeam.filter((p) => p.status === "dead");
+          const activeTeam = alive.filter((p) => p.is_active); // sin orden
           const deaths = dead.length;
 
           return (
@@ -307,21 +438,19 @@ export default function RunDashboard() {
                         )
                       }
                     >
-                      +
+                      🧰
                     </button>
                   </div>
                 </div>
 
-                {/* Equipo principal (hasta 6 vivos) */}
+                {/* Equipo principal: SOLO activos (máximo 6) y se puede matar/revivir con click */}
                 <div className="flex gap-3 flex-wrap">
                   {activeTeam.map((poke) => {
                     const label = poke.nickname || poke.pokemon_species.name;
                     return (
                       <div
                         key={poke.id}
-                        className={`relative cursor-pointer transition ${
-                          poke.status === "dead" ? "opacity-40 grayscale" : ""
-                        }`}
+                        className="relative cursor-pointer transition"
                         title={label}
                         onClick={() => toggleDeath(poke.id, poke.status)}
                       >
@@ -330,17 +459,12 @@ export default function RunDashboard() {
                           alt={label}
                           className="w-20 h-20 pixelated"
                         />
-                        {poke.status === "dead" && (
-                          <div className="absolute inset-0 flex items-center justify-center text-2xl">
-                            ☠
-                          </div>
-                        )}
                       </div>
                     );
                   })}
                   {activeTeam.length === 0 && (
                     <div className="text-xs text-muted-foreground">
-                      Sin vivos en el equipo
+                      Sin activos
                     </div>
                   )}
                 </div>
@@ -357,7 +481,6 @@ export default function RunDashboard() {
                   }
                   className="w-full border rounded px-2 py-1"
                 />
-
                 <input
                   placeholder="Nickname (opcional)"
                   value={nicknameByPlayer[player.id] || ""}
@@ -369,7 +492,6 @@ export default function RunDashboard() {
                   }
                   className="w-full border rounded px-2 py-1"
                 />
-
                 <button
                   className="border rounded px-3 py-1"
                   onClick={async () => {
@@ -401,7 +523,7 @@ export default function RunDashboard() {
                       setNicknameByPlayer((p) => ({ ...p, [player.id]: "" }));
                       setErrorByPlayer((p) => ({ ...p, [player.id]: "" }));
 
-                      // Refrescar por las dudas
+                      // Refresco por las dudas
                       loadRun();
                     } catch (e: any) {
                       setErrorByPlayer((p) => ({
@@ -413,7 +535,6 @@ export default function RunDashboard() {
                 >
                   Agregar
                 </button>
-
                 {errorByPlayer[player.id] && (
                   <div className="text-xs text-red-500">
                     {errorByPlayer[player.id]}
@@ -426,6 +547,8 @@ export default function RunDashboard() {
                     alive={alive}
                     dead={dead}
                     onToggleDeath={toggleDeath}
+                    onActivate={activatePokemon}
+                    onDeactivate={deactivatePokemon}
                     onClose={() => setOpenPlayerId(null)}
                   />
                 )}
