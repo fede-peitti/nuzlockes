@@ -213,26 +213,26 @@ export default function RunDashboard() {
     );
     setPlayers(playersFlat);
 
-    // 3️⃣ traer equipo completo (incluye is_active y active_slot)
     const { data: teamData } = await supabase
       .from("team_pokemon")
       .select(
         `
-        id,
-        status,
-        nickname,
-        player_id,
-        is_active,
-        active_slot,
-        pokemon_species (
-          name,
-          sprite_url
-        )
-      `
+    id,
+    status,
+    nickname,
+    player_id,
+    is_active,
+    active_slot,
+    pokemon_species: pokemon_species!team_pokemon_species_id_fkey (
+      name,
+      sprite_url
+    )
+  `
       )
-      .eq("run_id", run.id);
+      .eq("run_id", run.id)
+      .returns<TeamRow[]>();
 
-    setTeam((teamData ?? []) as TeamRow[]);
+    setTeam(teamData ?? []);
   }
 
   async function addPokemon({
@@ -251,21 +251,24 @@ export default function RunDashboard() {
     const { data: inserted, error } = await supabase
       .from("team_pokemon")
       .insert({
-        run_id: runId,
-        player_id: playerId,
-        species_id: species.id,
-        nickname,
-        status: "alive",
-        is_active: false,
-        active_slot: null,
+        /* ... */
       })
       .select(
         `
-        id, status, nickname, player_id, is_active, active_slot,
-        pokemon_species (name, sprite_url)
-      `
+    id,
+    status,
+    nickname,
+    player_id,
+    is_active,
+    active_slot,
+    pokemon_species: pokemon_species!team_pokemon_species_id_fkey (
+      name,
+      sprite_url
+    )
+  `
       )
-      .single();
+      .single()
+      .returns<TeamRow>();
 
     if (error) {
       if ((error as any).code === "23505") {
