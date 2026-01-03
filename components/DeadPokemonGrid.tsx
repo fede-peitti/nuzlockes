@@ -1,5 +1,6 @@
 import { TeamRow } from "@/types/TeamRow";
 import { PokemonSprite } from "./PokemonSprite";
+import { usePokemonLabel } from "@/hooks/usePokemonLabel";
 
 export function DeadPokemonGrid({
   dead,
@@ -16,7 +17,7 @@ export function DeadPokemonGrid({
 
       <div className="flex gap-3 flex-wrap">
         {dead.map((poke) => {
-          const label = poke.nickname || poke.pokemon_species?.name || "???";
+          const label = usePokemonLabel(poke);
 
           return (
             <div

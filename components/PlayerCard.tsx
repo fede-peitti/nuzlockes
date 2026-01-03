@@ -1,26 +1,27 @@
-"use client";
-
-import { PlayerCardProps } from "@/types/PlayerCard";
+import { ActiveSlot } from "@/components/ActiveSlot";
 import { PlayerBox } from "@/components/PlayerBox";
-import { AddPokemonForm } from "@/components/AddPokemonForm";
-import { PokemonSprite } from "@/components/PokemonSprite";
+import { PlayerCardProps } from "@/types/PlayerCard";
 
 export function PlayerCard({
   player,
   team,
   open,
   onToggleOpen,
-  onAddPokemon,
   onToggleDeath,
   onActivate,
   onDeactivate,
 }: PlayerCardProps) {
   const alive = team.filter((p) => p.status === "alive");
   const dead = team.filter((p) => p.status === "dead");
-  const activeTeam = alive.filter((p) => p.is_active);
+
+  const activeBySlot = new Map(
+    alive
+      .filter((p) => p.is_active && p.active_slot != null)
+      .map((p) => [p.active_slot!, p])
+  );
 
   return (
-    <div className="border rounded p-3 space-y-3">
+    <div className="border rounded-md p-4 space-y-3">
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={onToggleOpen}
@@ -29,20 +30,11 @@ export function PlayerCard({
         <span className="text-xs text-muted-foreground">☠ {dead.length}</span>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {activeTeam.map((poke) => {
-          const label = poke.nickname || poke.pokemon_species?.name || "???";
-
-          return (
-            <PokemonSprite
-              key={poke.id}
-              poke={poke}
-              onClick={() => onToggleDeath(poke.id, poke.status)}
-            />
-          );
-        })}
+      <div className="flex gap-2">
+        {[1, 2, 3, 4, 5, 6].map((slot) => (
+          <ActiveSlot key={slot} poke={activeBySlot.get(slot) ?? null} />
+        ))}
       </div>
-      {open && <AddPokemonForm onAdd={onAddPokemon} />}
 
       {open && (
         <PlayerBox

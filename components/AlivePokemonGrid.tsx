@@ -1,6 +1,6 @@
 import { TeamRow } from "@/types/TeamRow";
 import { PokemonSprite } from "./PokemonSprite";
-
+import { usePokemonLabel } from "@/hooks/usePokemonLabel";
 export function AlivePokemonGrid({
   alive,
   onToggleDeath,
@@ -17,7 +17,7 @@ export function AlivePokemonGrid({
       <h4 className="text-xs text-muted-foreground mb-2">Vivos</h4>
       <div className="flex gap-3 flex-wrap">
         {alive.map((poke) => {
-          const label = poke.nickname || poke.pokemon_species?.name || "???";
+          const label = usePokemonLabel(poke);
           const isActive = poke.is_active && poke.active_slot != null;
 
           return (
