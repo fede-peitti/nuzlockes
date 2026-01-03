@@ -1,4 +1,4 @@
-import { PokemonSpecies } from "./pokemon_speacies";
+import { PokemonSpecies } from "./PokemonSpecies";
 
 // Modela un Pokemon en el equipo
 export type TeamRow = {

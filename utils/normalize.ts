@@ -1,4 +1,4 @@
-import { TeamRow } from "@/types/teamrow";
+import { TeamRow } from "@/types/TeamRow";
 
 // Normaliza una fila de Supabase para el equipo de Pokémon
 export function normalizeTeamRow(row: any): TeamRow {
