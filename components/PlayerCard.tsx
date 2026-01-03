@@ -3,6 +3,7 @@
 import { PlayerCardProps } from "@/types/PlayerCard";
 import { PlayerBox } from "@/components/PlayerBox";
 import { AddPokemonForm } from "@/components/AddPokemonForm";
+import { PokemonSprite } from "@/components/PokemonSprite";
 
 export function PlayerCard({
   player,
@@ -33,11 +34,9 @@ export function PlayerCard({
           const label = poke.nickname || poke.pokemon_species?.name || "???";
 
           return (
-            <img
+            <PokemonSprite
               key={poke.id}
-              src={poke.pokemon_species?.sprite_url ?? "/placeholder.png"}
-              title={label}
-              className="w-14 h-14 pixelated cursor-pointer"
+              poke={poke}
               onClick={() => onToggleDeath(poke.id, poke.status)}
             />
           );

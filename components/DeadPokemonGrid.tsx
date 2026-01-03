@@ -1,4 +1,5 @@
 import { TeamRow } from "@/types/TeamRow";
+import { PokemonSprite } from "./PokemonSprite";
 
 export function DeadPokemonGrid({
   dead,
@@ -24,11 +25,13 @@ export function DeadPokemonGrid({
               title={label}
               onClick={() => onToggleDeath(poke.id, poke.status)}
             >
-              <img
-                src={poke.pokemon_species?.sprite_url ?? "/placeholder.png"}
-                alt={label}
-                className="w-20 h-20 pixelated"
+              <PokemonSprite
+                poke={poke}
+                grayscale
+                overlay={<span className="text-2xl">☠</span>}
+                onClick={() => onToggleDeath(poke.id, poke.status)}
               />
+
               <div className="absolute inset-0 flex items-center justify-center text-2xl">
                 ☠
               </div>
