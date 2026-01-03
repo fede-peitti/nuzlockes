@@ -5,6 +5,15 @@ import { normalizeTeamRow } from "@/utils/normalize";
 import { firstFreeSlot } from "@/utils/first_free_slot";
 import { getOrCreateSpecies } from "@/utils/get_create_species";
 
+type TeamRowRaw = Omit<TeamRow, "pokemon_species"> & {
+  pokemon_species:
+    | {
+        name: string;
+        sprite_url: string;
+      }[]
+    | null;
+};
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -91,7 +100,7 @@ export async function addPokemonToTeam(params: {
     throw error;
   }
 
-  return normalizeTeamRow(data as TeamRow);
+  return normalizeTeamRow(data as TeamRowRaw);
 }
 
 // Añadir Pokémon al equipo
@@ -127,7 +136,7 @@ export async function activatePokemon(runId: string, poke: TeamRow) {
     .single();
 
   if (error) throw error;
-  return normalizeTeamRow(data as TeamRow);
+  return normalizeTeamRow(data as TeamRowRaw);
 }
 
 // Desactivar Pokémon del equipo
@@ -145,7 +154,7 @@ export async function deactivatePokemon(pokeId: string) {
     .single();
 
   if (error) throw error;
-  return normalizeTeamRow(data as TeamRow);
+  return normalizeTeamRow(data as TeamRowRaw);
 }
 
 // Muerte
