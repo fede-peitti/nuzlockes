@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@supabase/supabase-js";
 
 import { Player } from "@/types/player";
+
 import { TeamRow } from "@/types/teamrow";
 import { normalizeTeamRow } from "@/utils/normalize";
 import { firstFreeSlot } from "@/utils/first_free_slot";
@@ -302,7 +303,8 @@ export default function RunDashboard() {
                 {/* Equipo principal: SOLO activos (máximo 6) y se puede matar/revivir con click */}
                 <div className="flex gap-3 flex-wrap">
                   {activeTeam.map((poke) => {
-                    const label = poke.nickname || poke.pokemon_species.name;
+                    const label =
+                      poke.nickname || poke.pokemon_species?.name || "???";
                     return (
                       <div
                         key={poke.id}
@@ -311,7 +313,10 @@ export default function RunDashboard() {
                         onClick={() => toggleDeath(poke.id, poke.status)}
                       >
                         <img
-                          src={poke.pokemon_species.sprite_url}
+                          src={
+                            poke.pokemon_species?.sprite_url ??
+                            "/placeholder.png"
+                          }
                           alt={label}
                           className="w-20 h-20 pixelated"
                         />
