@@ -34,8 +34,9 @@ export default function RunDashboard() {
     nickname?: string;
     currentPlayer: Player;
   }) {
+    if (!runId) return;
     const newPoke = await addPokemonToPlayer({
-      runId,
+      runId: runId!,
       playerId: currentPlayer.id,
       species,
       nickname,
