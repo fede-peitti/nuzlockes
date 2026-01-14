@@ -24,5 +24,6 @@ export function usePokemonAutocomplete(query: string) {
     return () => clearTimeout(t);
   }, [query]);
 
+  // dummy
   return { results, loading };
 }
