@@ -1,12 +1,14 @@
 import { ActiveSlot } from "@/components/ActiveSlot";
 import { PlayerBox } from "@/components/PlayerBox";
 import { PlayerCardProps } from "@/types/PlayerCard";
+import { AddPokemonForm } from "@/components/AddPokemonForm";
 
 export function PlayerCard({
   player,
   team,
   open,
   onToggleOpen,
+  onAddPokemon,
   onToggleDeath,
   onActivate,
   onDeactivate,
@@ -37,14 +39,21 @@ export function PlayerCard({
       </div>
 
       {open && (
-        <PlayerBox
-          alive={alive}
-          dead={dead}
-          onToggleDeath={onToggleDeath}
-          onActivate={onActivate}
-          onDeactivate={onDeactivate}
-          onClose={onToggleOpen}
-        />
+        <>
+          <AddPokemonForm
+            onAdd={async ({ pokemonName, nickname }) => {
+              await onAddPokemon({ pokemonName, nickname });
+            }}
+          />
+          <PlayerBox
+            alive={alive}
+            dead={dead}
+            onToggleDeath={onToggleDeath}
+            onActivate={onActivate}
+            onDeactivate={onDeactivate}
+            onClose={onToggleOpen}
+          />
+        </>
       )}
     </div>
   );
