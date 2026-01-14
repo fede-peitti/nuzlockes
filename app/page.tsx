@@ -46,7 +46,7 @@ export default function RunDashboard() {
               onToggleOpen={() =>
                 setOpenPlayerId((p) => (p === player.id ? null : player.id))
               }
-              onToggleDeath={async (id, status) => {
+              onToggleDeath={async (id: string, status: "alive" | "dead") => {
                 const next = status === "alive" ? "dead" : "alive";
                 await togglePokemonDeath(id, next);
                 setTeam((prev) =>
@@ -63,16 +63,21 @@ export default function RunDashboard() {
                   )
                 );
               }}
-              onActivate={async (poke) => {
+              onActivate={async (poke: TeamRow) => {
                 if (!runId) return;
-                const updated = await activatePokemon(runId, poke);
-                setTeam((prev) =>
+
+                const updated: TeamRow = await activatePokemon(runId, poke);
+
+                setTeam((prev: TeamRow[]) =>
                   prev.map((p) => (p.id === poke.id ? updated : p))
                 );
               }}
-              onDeactivate={async (id) => {
-                const updated = await deactivatePokemon(id);
-                setTeam((prev) => prev.map((p) => (p.id === id ? updated : p)));
+              onDeactivate={async (id: string) => {
+                const updated: TeamRow = await deactivatePokemon(id);
+
+                setTeam((prev: TeamRow[]) =>
+                  prev.map((p) => (p.id === id ? updated : p))
+                );
               }}
             />
           ))}
