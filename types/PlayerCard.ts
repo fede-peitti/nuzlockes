@@ -6,8 +6,7 @@ export type PlayerCardProps = {
   team: TeamRow[];
   open: boolean;
   onToggleOpen: () => void;
-  onToggleDeath: ...
-  onActivate: ...
-  onDeactivate: ...
+  onToggleDeath: (id: string, status: "alive" | "dead") => void;
+  onActivate: (poke: TeamRow) => Promise<void>;
+  onDeactivate: (id: string) => Promise<void>;
 };
-

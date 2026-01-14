@@ -90,7 +90,7 @@ export function PokemonAutocomplete({
           >
             {results.map((p, i) => (
               <div
-                key={p.id}
+                key={p.name}
                 style={{
                   display: "flex",
                   alignItems: "center",
