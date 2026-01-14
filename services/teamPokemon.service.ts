@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { PokemonSpecies } from "@/types/PokemonSpecies";
+import { TeamRow } from "@/types/TeamRow";
 
 export async function addPokemonToPlayer({
   runId,
@@ -11,7 +12,7 @@ export async function addPokemonToPlayer({
   playerId: string;
   species: PokemonSpecies;
   nickname?: string;
-}) {
+}): Promise<TeamRow> {
   const { data: activeAlive, error } = await supabase
     .from("team_pokemon")
     .select("active_slot")
@@ -38,15 +39,21 @@ export async function addPokemonToPlayer({
     }
   }
 
-  const { error: insertError } = await supabase.from("team_pokemon").insert({
-    run_id: runId,
-    player_id: playerId,
-    species_id: species.id,
-    nickname,
-    status: "alive",
-    is_active,
-    active_slot,
-  });
+  const { data: insertedData, error: insertError } = await supabase
+    .from("team_pokemon")
+    .insert({
+      run_id: runId,
+      player_id: playerId,
+      species_id: species.id,
+      nickname,
+      status: "alive",
+      is_active,
+      active_slot,
+    })
+    .select("*")
+    .single();
 
   if (insertError) throw insertError;
+
+  return insertedData as TeamRow;
 }

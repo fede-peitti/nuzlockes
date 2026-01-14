@@ -25,27 +25,6 @@ export default function RunDashboard() {
   const [runId, setRunId] = useState<string | null>(null);
   const [openPlayerId, setOpenPlayerId] = useState<string | null>(null);
 
-  async function handleAddPokemon({
-    species,
-    nickname,
-    currentPlayer,
-  }: {
-    species: PokemonSpecies;
-    nickname?: string;
-    currentPlayer: Player;
-  }) {
-    if (!runId) return;
-    const newPoke = await addPokemonToPlayer({
-      runId: runId!,
-      playerId: currentPlayer.id,
-      species,
-      nickname,
-    });
-
-    // Refrescamos el estado local
-    setTeam((prev) => [...prev, newPoke]);
-  }
-
   useEffect(() => {
     loadRun(RUN_GAME, RUN_MODE).then(({ runId, players, team }) => {
       setRunId(runId);
