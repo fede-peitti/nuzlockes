@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { usePokemonAutocomplete } from "@/hooks/usePokemonAutocomplete";
+import { usePokemonAutocomplete } from "@/hooks/usePokemonAutoComplete";
 import { PokemonSpecies } from "@/types/PokemonSpecies";
 
 export function PokemonAutocomplete({

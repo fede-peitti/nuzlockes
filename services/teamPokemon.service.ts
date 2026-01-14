@@ -44,7 +44,7 @@ export async function addPokemonToPlayer({
     .insert({
       run_id: runId,
       player_id: playerId,
-      species_id: species.id,
+      species_id: species.name,
       nickname,
       status: "alive",
       is_active,
