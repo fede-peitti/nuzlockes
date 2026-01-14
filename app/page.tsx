@@ -6,7 +6,6 @@ import { RunHeader } from "@/components/RunHeader";
 import { PlayerCard } from "@/components/PlayerCard";
 import type { Player } from "@/types/Player";
 import type { TeamRow } from "@/types/TeamRow";
-
 import {
   loadRun,
   activatePokemon,
