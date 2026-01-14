@@ -26,9 +26,9 @@ export function PokemonAutocomplete({
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("pointerdown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("pointerdown", handleClickOutside);
     };
   }, []);
 
@@ -104,7 +104,10 @@ export function PokemonAutocomplete({
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.background = "white")
                 }
-                onClick={() => {
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+
                   onSelect(p);
                   setQuery("");
                 }}

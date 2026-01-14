@@ -6,10 +6,11 @@ import { RunHeader } from "@/components/RunHeader";
 import { PlayerCard } from "@/components/PlayerCard";
 import type { Player } from "@/types/Player";
 import type { TeamRow } from "@/types/TeamRow";
+import { addPokemonToPlayer } from "@/services/teamPokemon.service";
+import { PokemonSpecies } from "@/types/PokemonSpecies";
 
 import {
   loadRun,
-  addPokemonToTeam,
   activatePokemon,
   deactivatePokemon,
   togglePokemonDeath,
@@ -23,6 +24,25 @@ export default function RunDashboard() {
   const [team, setTeam] = useState<TeamRow[]>([]);
   const [runId, setRunId] = useState<string | null>(null);
   const [openPlayerId, setOpenPlayerId] = useState<string | null>(null);
+
+  async function handleAddPokemon({
+    species,
+    nickname,
+    currentPlayer,
+  }: {
+    species: PokemonSpecies;
+    nickname?: string;
+  }) {
+    const newPoke = await addPokemonToPlayer({
+      runId,
+      playerId: currentPlayer.id,
+      species,
+      nickname,
+    });
+
+    // Refrescamos el estado local
+    setTeam((prev) => [...prev, newPoke]);
+  }
 
   useEffect(() => {
     loadRun(RUN_GAME, RUN_MODE).then(({ runId, players, team }) => {
@@ -41,21 +61,12 @@ export default function RunDashboard() {
           <PlayerCard
             key={player.id}
             player={player}
+            runId={runId}
             team={team.filter((t) => t.player_id === player.id)}
             open={openPlayerId === player.id}
             onToggleOpen={() =>
               setOpenPlayerId((p) => (p === player.id ? null : player.id))
             }
-            onAddPokemon={async ({ pokemonName, nickname }) => {
-              if (!runId) return;
-              const inserted = await addPokemonToTeam({
-                runId,
-                playerId: player.id,
-                pokemonName,
-                nickname,
-              });
-              setTeam((prev) => [...prev, inserted]);
-            }}
             onToggleDeath={async (id, status) => {
               const next = status === "alive" ? "dead" : "alive";
               await togglePokemonDeath(id, next);

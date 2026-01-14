@@ -3,47 +3,43 @@
 import { useState } from "react";
 import { PokemonAutocomplete } from "@/components/PokemonAutocomplete";
 import { PokemonSpecies } from "@/types/PokemonSpecies";
+import { SelectedPokemonCard } from "@/components/SelectedPokemonCard";
 
 export function AddPokemonForm({
   onAdd,
 }: {
-  onAdd: (args: { pokemonName: string; nickname?: string }) => Promise<void>;
+  onAdd: (args: {
+    species: PokemonSpecies;
+    nickname?: string;
+  }) => Promise<void>;
 }) {
   const [selected, setSelected] = useState<PokemonSpecies | null>(null);
   const [nickname, setNickname] = useState("");
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <PokemonAutocomplete
         onSelect={(p) => {
           setSelected(p);
         }}
       />
 
-      <input
-        placeholder="Nickname (opcional)"
-        value={nickname}
-        onChange={(e) => setNickname(e.target.value)}
-        className="border rounded px-2 py-1 w-full"
-      />
+      {selected && (
+        <SelectedPokemonCard
+          pokemon={selected}
+          nickname={nickname}
+          onNicknameChange={setNickname}
+          onConfirm={async () => {
+            await onAdd({
+              species: selected,
+              nickname: nickname || undefined,
+            });
 
-      <button
-        className="border rounded px-3 py-1 w-full disabled:opacity-50"
-        disabled={!selected}
-        onClick={async () => {
-          if (!selected) return;
-
-          await onAdd({
-            pokemonName: selected.name,
-            nickname: nickname || undefined,
-          });
-
-          setSelected(null);
-          setNickname("");
-        }}
-      >
-        Agregar
-      </button>
+            setSelected(null);
+            setNickname("");
+          }}
+        />
+      )}
     </div>
   );
 }
