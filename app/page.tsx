@@ -12,6 +12,8 @@ import {
   deactivatePokemon,
   togglePokemonDeath,
 } from "@/services/run.service";
+import { addPokemonToPlayer } from "@/services/teamPokemon.service";
+import { PokemonSpecies } from "@/types/PokemonSpecies";
 
 const RUN_GAME = "Pokémon Sol y Luna";
 const RUN_MODE = "Wonderlocke";
@@ -21,6 +23,27 @@ export default function RunDashboard() {
   const [team, setTeam] = useState<TeamRow[]>([]);
   const [runId, setRunId] = useState<string | null>(null);
   const [openPlayerId, setOpenPlayerId] = useState<string | null>(null);
+
+  async function handleAddPokemon({
+    species,
+    nickname,
+    currentPlayer,
+  }: {
+    species: PokemonSpecies;
+    nickname?: string;
+    currentPlayer: Player;
+  }) {
+    if (!runId) return;
+
+    const newPoke = await addPokemonToPlayer({
+      runId,
+      playerId: currentPlayer.id,
+      species,
+      nickname,
+    });
+
+    setTeam((prev) => [...prev, newPoke]);
+  }
 
   useEffect(() => {
     loadRun(RUN_GAME, RUN_MODE).then(({ runId, players, team }) => {
@@ -40,7 +63,6 @@ export default function RunDashboard() {
             <PlayerCard
               key={player.id}
               player={player}
-              runId={runId}
               team={team.filter((t) => t.player_id === player.id)}
               open={openPlayerId === player.id}
               onToggleOpen={() =>
@@ -78,6 +100,14 @@ export default function RunDashboard() {
                 setTeam((prev: TeamRow[]) =>
                   prev.map((p) => (p.id === id ? updated : p))
                 );
+              }}
+              onAddPokemon={async ({ species, nickname, player }) => {
+                if (!runId) return;
+                await handleAddPokemon({
+                  species,
+                  nickname,
+                  currentPlayer: player,
+                });
               }}
             />
           ))}

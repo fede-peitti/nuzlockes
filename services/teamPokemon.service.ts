@@ -21,7 +21,10 @@ export async function addPokemonToPlayer({
     .eq("status", "alive")
     .eq("is_active", true);
 
-  if (error) throw error;
+  if (error) {
+    console.error("active slots error", error);
+    throw new Error(error.message);
+  }
 
   const usedSlots = new Set(activeAlive.map((p) => p.active_slot));
   const hasFreeSlot = usedSlots.size < 6;
@@ -44,16 +47,28 @@ export async function addPokemonToPlayer({
     .insert({
       run_id: runId,
       player_id: playerId,
-      species_id: species.name,
+      species_id: species.id,
       nickname,
       status: "alive",
       is_active,
       active_slot,
     })
-    .select("*")
+    .select(
+      `
+    *,
+    pokemon_species (
+      id,
+      name,
+      sprite_url
+    )
+  `
+    )
     .single();
 
-  if (insertError) throw insertError;
+  if (insertError) {
+    console.error("insert pokemon error", insertError);
+    throw new Error(insertError.message);
+  }
 
   return insertedData as TeamRow;
 }

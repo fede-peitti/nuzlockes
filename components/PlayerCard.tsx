@@ -2,10 +2,8 @@ import { ActiveSlot } from "@/components/ActiveSlot";
 import { PlayerBox } from "@/components/PlayerBox";
 import { PlayerCardProps } from "@/types/PlayerCard";
 import { AddPokemonForm } from "@/components/AddPokemonForm";
-import { addPokemonToPlayer } from "@/services/teamPokemon.service";
 
 export function PlayerCard({
-  runId,
   player,
   team,
   open,
@@ -13,6 +11,7 @@ export function PlayerCard({
   onToggleDeath,
   onActivate,
   onDeactivate,
+  onAddPokemon,
 }: PlayerCardProps) {
   const alive = team.filter((p) => p.status === "alive");
   const dead = team.filter((p) => p.status === "dead");
@@ -43,11 +42,10 @@ export function PlayerCard({
         <>
           <AddPokemonForm
             onAdd={async ({ species, nickname }) => {
-              await addPokemonToPlayer({
-                runId,
-                playerId: player.id,
+              await onAddPokemon({
                 species,
                 nickname,
+                player,
               });
             }}
           />
