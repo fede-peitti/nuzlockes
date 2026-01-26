@@ -11,7 +11,7 @@ type Props = {
 
 export function PokemonKebab({ open, onOpen, onClose, onDelete }: Props) {
   return (
-    <div className="absolute top-1 right-1 z-50">
+    <div className="absolute -top-2 -right-2000 z-[9999]">
       {/* botón */}
       <button
         type="button"
@@ -29,7 +29,7 @@ export function PokemonKebab({ open, onOpen, onClose, onDelete }: Props) {
         <div
           className="
             absolute top-6 right-0
-            w-32
+            w-34
             bg-white
             border
             rounded

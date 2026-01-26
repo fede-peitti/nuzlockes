@@ -21,10 +21,6 @@ export function AlivePokemonGrid({
 }) {
   const [openMenuId, setOpenMenuId] = React.useState<string | null>(null);
 
-  const onDelete = (id: string) => {
-    console.log("Delete Pokemon with ID:", id);
-  };
-
   return (
     <div>
       <h4 className="text-xs text-muted-foreground mb-2">Vivos</h4>
@@ -35,14 +31,12 @@ export function AlivePokemonGrid({
           const isActive = poke.is_active && poke.active_slot != null;
 
           return (
-            <div key={poke.id} className="flex flex-col items-center gap-1">
+            <div key={poke.id} className="flex flex-col items-center gap-200">
               {/* sprite + kebab */}
-              <div
-                className="relative"
-                title={label}
-                onClick={() => onToggleDeath(poke.id, poke.status)}
-              >
-                <PokemonSprite poke={poke} />
+              <div className="relative" title={label}>
+                <div onClick={() => onToggleDeath(poke.id, poke.status)}>
+                  <PokemonSprite poke={poke} />
+                </div>
 
                 <PokemonKebab
                   open={openMenuId === poke.id}
@@ -54,7 +48,7 @@ export function AlivePokemonGrid({
 
               {/* activar */}
               <button
-                className={`text-xs px-2 py-1 rounded border ${
+                className={`text-xs py-1 rounded border w-16 ${
                   isActive ? "bg-yellow-100" : ""
                 }`}
                 onClick={async () => {
