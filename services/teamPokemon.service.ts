@@ -61,7 +61,7 @@ export async function addPokemonToPlayer({
       name,
       sprite_url
     )
-  `
+  `,
     )
     .single();
 
@@ -71,4 +71,13 @@ export async function addPokemonToPlayer({
   }
 
   return insertedData as TeamRow;
+}
+
+export async function deletePokemon(pokemonId: string): Promise<void> {
+  const { error } = await supabase
+    .from("team_pokemon")
+    .delete()
+    .eq("id", pokemonId);
+
+  if (error) throw error;
 }

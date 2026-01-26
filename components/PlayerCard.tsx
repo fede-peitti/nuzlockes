@@ -12,6 +12,7 @@ export function PlayerCard({
   onActivate,
   onDeactivate,
   onAddPokemon,
+  onDeletePokemon,
 }: PlayerCardProps) {
   const alive = team.filter((p) => p.status === "alive");
   const dead = team.filter((p) => p.status === "dead");
@@ -19,7 +20,7 @@ export function PlayerCard({
   const activeBySlot = new Map(
     alive
       .filter((p) => p.is_active && p.active_slot != null)
-      .map((p) => [p.active_slot!, p])
+      .map((p) => [p.active_slot!, p]),
   );
 
   return (
@@ -57,6 +58,7 @@ export function PlayerCard({
             onActivate={onActivate}
             onDeactivate={onDeactivate}
             onClose={onToggleOpen}
+            onDeletePokemon={onDeletePokemon}
           />
         </>
       )}

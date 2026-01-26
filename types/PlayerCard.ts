@@ -17,4 +17,5 @@ export type PlayerCardProps = {
   onToggleDeath: (id: string, status: "alive" | "dead") => Promise<void>;
   onActivate: (poke: TeamRow) => Promise<void>;
   onDeactivate: (id: string) => Promise<void>;
+  onDeletePokemon: (id: string) => Promise<void>;
 };

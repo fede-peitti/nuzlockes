@@ -12,7 +12,10 @@ import {
   deactivatePokemon,
   togglePokemonDeath,
 } from "@/services/run.service";
-import { addPokemonToPlayer } from "@/services/teamPokemon.service";
+import {
+  addPokemonToPlayer,
+  deletePokemon,
+} from "@/services/teamPokemon.service";
 import { PokemonSpecies } from "@/types/PokemonSpecies";
 
 const RUN_GAME = "Pokémon Sol y Luna";
@@ -43,6 +46,11 @@ export default function RunDashboard() {
     });
 
     setTeam((prev) => [...prev, newPoke]);
+  }
+
+  async function handleDeletePokemon(pokemonId: string) {
+    await deletePokemon(pokemonId);
+    setTeam((prev) => prev.filter((p) => p.id !== pokemonId));
   }
 
   useEffect(() => {
@@ -81,8 +89,8 @@ export default function RunDashboard() {
                             ? { is_active: false, active_slot: null }
                             : {}),
                         }
-                      : p
-                  )
+                      : p,
+                  ),
                 );
               }}
               onActivate={async (poke: TeamRow) => {
@@ -91,14 +99,14 @@ export default function RunDashboard() {
                 const updated: TeamRow = await activatePokemon(runId, poke);
 
                 setTeam((prev: TeamRow[]) =>
-                  prev.map((p) => (p.id === poke.id ? updated : p))
+                  prev.map((p) => (p.id === poke.id ? updated : p)),
                 );
               }}
               onDeactivate={async (id: string) => {
                 const updated: TeamRow = await deactivatePokemon(id);
 
                 setTeam((prev: TeamRow[]) =>
-                  prev.map((p) => (p.id === id ? updated : p))
+                  prev.map((p) => (p.id === id ? updated : p)),
                 );
               }}
               onAddPokemon={async ({ species, nickname, player }) => {
@@ -108,6 +116,9 @@ export default function RunDashboard() {
                   nickname,
                   currentPlayer: player,
                 });
+              }}
+              onDeletePokemon={async (pokemonId: string) => {
+                await handleDeletePokemon(pokemonId);
               }}
             />
           ))}

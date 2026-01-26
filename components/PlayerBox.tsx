@@ -10,6 +10,7 @@ export function PlayerBox({
   onActivate,
   onDeactivate,
   onClose,
+  onDeletePokemon,
 }: {
   alive: TeamRow[];
   dead: TeamRow[];
@@ -17,6 +18,7 @@ export function PlayerBox({
   onActivate: (poke: TeamRow) => Promise<void>;
   onDeactivate: (pokeId: string) => Promise<void>;
   onClose: () => void;
+  onDeletePokemon: (pokeId: string) => Promise<void>;
 }) {
   return (
     <div className="mt-4 border rounded-md p-4 space-y-4">
@@ -27,6 +29,7 @@ export function PlayerBox({
         onToggleDeath={onToggleDeath}
         onActivate={onActivate}
         onDeactivate={onDeactivate}
+        onDeletePokemon={onDeletePokemon}
       />
 
       <DeadPokemonGrid dead={dead} onToggleDeath={onToggleDeath} />
