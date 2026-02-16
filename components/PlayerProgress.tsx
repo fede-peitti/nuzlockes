@@ -5,9 +5,10 @@ import { RunProgress } from "@/types/RunProgress";
 type Props = {
   playerId: string;
   progress: RunProgress;
+  size?: number;
 };
 
-export function PlayerProgress({ playerId, progress }: Props) {
+export function PlayerProgress({ playerId, progress, size = 26 }: Props) {
   const completed = progress.playerProgress[playerId] ?? new Set();
 
   return (
@@ -19,21 +20,27 @@ export function PlayerProgress({ playerId, progress }: Props) {
 
         const isCompleted = completed.has(milestone.id);
 
-        const icon =
-          milestone.icon_type === "emoji" ? milestone.icon_value : "⬜";
-
         return (
-          <span
+          <div
             key={milestone.id}
             title={milestone.label}
             className={`
-              text-sm
+              flex items-center justify-center
               transition-all duration-200
-              ${isCompleted ? "opacity-100" : "opacity-30 grayscale saturate-0"}
+              ${isCompleted ? "opacity-100" : "opacity-30 grayscale"}
             `}
+            style={{ width: size, height: size }}
           >
-            {icon}
-          </span>
+            {milestone.icon_type === "image" ? (
+              <img
+                src={`/milestones/${milestone.icon_value}`}
+                alt={milestone.label}
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <span className="text-sm">{milestone.icon_value}</span>
+            )}
+          </div>
         );
       })}
     </div>
