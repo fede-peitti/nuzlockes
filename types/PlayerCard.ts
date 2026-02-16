@@ -1,12 +1,21 @@
-import { PokemonSpecies } from "@/types/PokemonSpecies";
 import { Player } from "@/types/Player";
 import { TeamRow } from "@/types/TeamRow";
+import { RunProgress } from "@/types/RunProgress";
+import { PokemonSpecies } from "@/types/PokemonSpecies";
 
 export type PlayerCardProps = {
   player: Player;
   team: TeamRow[];
+  progress: RunProgress;
+
   open: boolean;
+
   onToggleOpen: () => void;
+
+  onToggleDeath: (id: string, status: "alive" | "dead") => void;
+
+  onActivate: (poke: TeamRow) => Promise<void>;
+  onDeactivate: (id: string) => Promise<void>;
 
   onAddPokemon: (args: {
     species: PokemonSpecies;
@@ -14,8 +23,5 @@ export type PlayerCardProps = {
     player: Player;
   }) => Promise<void>;
 
-  onToggleDeath: (id: string, status: "alive" | "dead") => Promise<void>;
-  onActivate: (poke: TeamRow) => Promise<void>;
-  onDeactivate: (id: string) => Promise<void>;
-  onDeletePokemon: (id: string) => Promise<void>;
+  onDeletePokemon: (pokemonId: string) => Promise<void>;
 };

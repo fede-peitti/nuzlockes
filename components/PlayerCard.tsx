@@ -2,10 +2,12 @@ import { ActiveSlot } from "@/components/ActiveSlot";
 import { PlayerBox } from "@/components/PlayerBox";
 import { PlayerCardProps } from "@/types/PlayerCard";
 import { AddPokemonForm } from "@/components/AddPokemonForm";
+import { PlayerProgress } from "@/components/PlayerProgress";
 
 export function PlayerCard({
   player,
   team,
+  progress,
   open,
   onToggleOpen,
   onToggleDeath,
@@ -29,7 +31,14 @@ export function PlayerCard({
         className="flex items-center justify-between cursor-pointer"
         onClick={onToggleOpen}
       >
-        <h3 className="font-semibold">{player.name}</h3>
+        <div>
+          <h3 className="font-semibold">{player.name}</h3>
+
+          {progress && (
+            <PlayerProgress playerId={player.id} progress={progress} />
+          )}
+        </div>
+
         <span className="text-xs text-muted-foreground">☠ {dead.length}</span>
       </div>
 
