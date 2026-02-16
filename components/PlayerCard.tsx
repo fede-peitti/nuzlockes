@@ -1,4 +1,4 @@
-import { ActiveSlot } from "@/components/ActiveSlot";
+import { ActiveSlot } from "@/components/active-slot/ActiveSlot";
 import { PlayerBox } from "@/components/PlayerBox";
 import { PlayerCardProps } from "@/types/PlayerCard";
 import { AddPokemonForm } from "@/components/AddPokemonForm";
@@ -43,9 +43,23 @@ export function PlayerCard({
       </div>
 
       <div className="flex gap-2">
-        {[1, 2, 3, 4, 5, 6].map((slot) => (
-          <ActiveSlot key={slot} poke={activeBySlot.get(slot) ?? null} />
-        ))}
+        {[1, 2, 3, 4, 5, 6].map((slot) => {
+          const poke = activeBySlot.get(slot) ?? null;
+
+          return (
+            <ActiveSlot
+              key={slot}
+              poke={poke}
+              onKill={
+                poke
+                  ? async (pokemonId) => {
+                      await onToggleDeath(pokemonId, "alive");
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
       </div>
 
       {open && (
